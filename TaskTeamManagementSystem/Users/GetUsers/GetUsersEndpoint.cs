@@ -1,6 +1,7 @@
 using Carter;
 using Mapster;
 using MediatR;
+using TaskTeamManagementSystem.Authorization;
 using TaskTeamManagementSystem.Domain.Models;
 
 namespace TaskTeamManagementSystem.Users.GetUsers
@@ -19,31 +20,43 @@ namespace TaskTeamManagementSystem.Users.GetUsers
         {
             app.MapGet("/users",
                 async (ISender sender,
+                       HttpContext context,
+                       IAuthorizationService authService,
                        Role? role,
                        string? sortBy,
                        bool sortDescending = false,
                        int pageNumber = 1,
                        int pageSize = 10) =>
                 {
-                    var query = new GetUsersQuery(
-                        Role: role,
-                        SortBy: sortBy,
-                        SortDescending: sortDescending,
-                        PageNumber: pageNumber,
-                        PageSize: pageSize
+                    return await AuthorizationFilter.AuthorizeAsync(
+                        context,
+                        authService,
+                        async (user) =>
+                        {
+                            var query = new GetUsersQuery(
+                                Role: role,
+                                SortBy: sortBy,
+                                SortDescending: sortDescending,
+                                PageNumber: pageNumber,
+                                PageSize: pageSize
+                            );
+
+                            var result = await sender.Send(query);
+
+                            var response = result.Adapt<GetUsersResponse>();
+
+                            return Results.Ok(response);
+                        },
+                        Role.Admin, Role.Manager
                     );
-
-                    var result = await sender.Send(query);
-
-                    var response = result.Adapt<GetUsersResponse>();
-
-                    return Results.Ok(response);
                 })
             .WithName("GetUsers")
             .Produces<GetUsersResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .WithSummary("Get All Users")
-            .WithDescription("Retrieve users with optional filters (role), sorting (sortBy, sortDescending), and pagination (pageNumber, pageSize)");
+            .WithDescription("Retrieve users with optional filters (Admin and Manager Only)");
         }
     }
 }

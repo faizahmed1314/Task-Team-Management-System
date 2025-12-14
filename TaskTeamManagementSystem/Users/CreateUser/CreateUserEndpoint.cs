@@ -1,6 +1,7 @@
 ﻿using Carter;
 using Mapster;
 using MediatR;
+using TaskTeamManagementSystem.Authorization;
 using TaskTeamManagementSystem.Domain.Models;
 
 namespace TaskTeamManagementSystem.Users.CreateUser
@@ -13,22 +14,31 @@ namespace TaskTeamManagementSystem.Users.CreateUser
         public void AddRoutes(IEndpointRouteBuilder app)
         {
             app.MapPost("/users",
-                async (CreateUserRequest request, ISender sender) =>
+                async (CreateUserRequest request, ISender sender, HttpContext context, IAuthorizationService authService) =>
                 {
-                    var command = request.Adapt<CreateUserCommand>();
+                    return await AuthorizationFilter.AuthorizeAsync(
+                        context,
+                        authService,
+                        async (user) =>
+                        {
+                            var command = request.Adapt<CreateUserCommand>();
 
-                    var result = await sender.Send(command);
+                            var result = await sender.Send(command);
 
-                    var response = result.Adapt<CreateUsereResponse>();
+                            var response = result.Adapt<CreateUsereResponse>();
 
-                    return Results.Created($"/users/{response.Id}", response);
-
+                            return Results.Created($"/users/{response.Id}", response);
+                        },
+                        Role.Admin
+                    );
                 })
             .WithName("CreateUser")
             .Produces<CreateUsereResponse>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .WithSummary("Create User")
-            .WithDescription("Create User");
+            .WithDescription("Create User (Admin Only)");
         }
     }
 }

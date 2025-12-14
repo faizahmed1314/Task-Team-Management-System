@@ -1,6 +1,8 @@
 using Carter;
 using Mapster;
 using MediatR;
+using TaskTeamManagementSystem.Authorization;
+using TaskTeamManagementSystem.Domain.Models;
 
 namespace TaskTeamManagementSystem.Teams.DeleteTeam
 {
@@ -11,21 +13,31 @@ namespace TaskTeamManagementSystem.Teams.DeleteTeam
         public void AddRoutes(IEndpointRouteBuilder app)
         {
             app.MapDelete("/teams/{id}",
-                async (int id, ISender sender) =>
+                async (int id, ISender sender, HttpContext context, IAuthorizationService authService) =>
                 {
-                    var command = new DeleteTeamCommand(id);
+                    return await AuthorizationFilter.AuthorizeAsync(
+                        context,
+                        authService,
+                        async (user) =>
+                        {
+                            var command = new DeleteTeamCommand(id);
 
-                    var result = await sender.Send(command);
+                            var result = await sender.Send(command);
 
-                    var response = result.Adapt<DeleteTeamResponse>();
+                            var response = result.Adapt<DeleteTeamResponse>();
 
-                    return Results.Ok(response);
+                            return Results.Ok(response);
+                        },
+                        Role.Admin
+                    );
                 })
             .WithName("DeleteTeam")
             .Produces<DeleteTeamResponse>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .WithSummary("Delete Team")
-            .WithDescription("Delete a team from the database");
+            .WithDescription("Delete a team from the database (Admin Only)");
         }
     }
 }

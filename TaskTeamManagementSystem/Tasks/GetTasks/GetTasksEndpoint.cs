@@ -1,6 +1,7 @@
 using Carter;
 using Mapster;
 using MediatR;
+using TaskTeamManagementSystem.Authorization;
 using TaskTeamManagementSystem.Domain.Models;
 using TaskStatus = TaskTeamManagementSystem.Domain.Models.TaskStatus;
 
@@ -20,6 +21,8 @@ namespace TaskTeamManagementSystem.Tasks.GetTasks
         {
             app.MapGet("/tasks",
                 async (ISender sender, 
+                       HttpContext context,
+                       IAuthorizationService authService,
                        TaskStatus? status, 
                        int? assignedToUserId, 
                        int? teamId, 
@@ -30,29 +33,43 @@ namespace TaskTeamManagementSystem.Tasks.GetTasks
                        int pageNumber = 1,
                        int pageSize = 10) =>
                 {
-                    var query = new GetTasksQuery(
-                        Status: status,
-                        AssignedToUserId: assignedToUserId,
-                        TeamId: teamId,
-                        DueDateFrom: dueDateFrom,
-                        DueDateTo: dueDateTo,
-                        SortBy: sortBy,
-                        SortDescending: sortDescending,
-                        PageNumber: pageNumber,
-                        PageSize: pageSize
+                    return await AuthorizationFilter.AuthorizeAsync(
+                        context,
+                        authService,
+                        async (user) =>
+                        {
+                            var finalAssignedToUserId = user.Role == Role.Employee 
+                                ? user.Id 
+                                : assignedToUserId;
+
+                            var query = new GetTasksQuery(
+                                Status: status,
+                                AssignedToUserId: finalAssignedToUserId,
+                                TeamId: teamId,
+                                DueDateFrom: dueDateFrom,
+                                DueDateTo: dueDateTo,
+                                SortBy: sortBy,
+                                SortDescending: sortDescending,
+                                PageNumber: pageNumber,
+                                PageSize: pageSize
+                            );
+
+                            var result = await sender.Send(query);
+
+                            var response = result.Adapt<GetTasksResponse>();
+
+                            return Results.Ok(response);
+                        },
+                        Role.Admin, Role.Manager, Role.Employee
                     );
-
-                    var result = await sender.Send(query);
-
-                    var response = result.Adapt<GetTasksResponse>();
-
-                    return Results.Ok(response);
                 })
             .WithName("GetTasks")
             .Produces<GetTasksResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .WithSummary("Get All Tasks")
-            .WithDescription("Retrieve tasks with optional filters (status, assignedToUserId, teamId, dueDateFrom, dueDateTo), sorting (sortBy, sortDescending), and pagination (pageNumber, pageSize)");
+            .WithDescription("Retrieve tasks with optional filters (Employees see only their assigned tasks, Managers and Admins see all tasks)");
         }
     }
 }

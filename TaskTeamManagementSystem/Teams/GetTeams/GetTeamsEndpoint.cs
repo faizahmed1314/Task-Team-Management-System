@@ -1,6 +1,7 @@
 using Carter;
 using Mapster;
 using MediatR;
+using TaskTeamManagementSystem.Authorization;
 using TaskTeamManagementSystem.Domain.Models;
 
 namespace TaskTeamManagementSystem.Teams.GetTeams
@@ -19,29 +20,41 @@ namespace TaskTeamManagementSystem.Teams.GetTeams
         {
             app.MapGet("/teams",
                 async (ISender sender,
+                       HttpContext context,
+                       IAuthorizationService authService,
                        string? sortBy,
                        bool sortDescending = false,
                        int pageNumber = 1,
                        int pageSize = 10) =>
                 {
-                    var query = new GetTeamsQuery(
-                        SortBy: sortBy,
-                        SortDescending: sortDescending,
-                        PageNumber: pageNumber,
-                        PageSize: pageSize
+                    return await AuthorizationFilter.AuthorizeAsync(
+                        context,
+                        authService,
+                        async (user) =>
+                        {
+                            var query = new GetTeamsQuery(
+                                SortBy: sortBy,
+                                SortDescending: sortDescending,
+                                PageNumber: pageNumber,
+                                PageSize: pageSize
+                            );
+
+                            var result = await sender.Send(query);
+
+                            var response = result.Adapt<GetTeamsResponse>();
+
+                            return Results.Ok(response);
+                        },
+                        Role.Admin, Role.Manager
                     );
-
-                    var result = await sender.Send(query);
-
-                    var response = result.Adapt<GetTeamsResponse>();
-
-                    return Results.Ok(response);
                 })
             .WithName("GetTeams")
             .Produces<GetTeamsResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .WithSummary("Get All Teams")
-            .WithDescription("Retrieve teams with sorting (sortBy, sortDescending) and pagination (pageNumber, pageSize)");
+            .WithDescription("Retrieve teams with sorting and pagination (Admin and Manager Only)");
         }
     }
 }

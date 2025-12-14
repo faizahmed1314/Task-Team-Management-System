@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Ordering.Infrastructure.Data.Extensions;
+using TaskTeamManagementSystem.Authorization;
 using TaskTeamManagementSystem.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +28,9 @@ builder.Services.AddValidatorsFromAssembly(assembly);
 
 // Add Carter
 builder.Services.AddCarter();
+
+// Add Authorization Service
+builder.Services.AddScoped<IAuthorizationService, AuthorizationService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

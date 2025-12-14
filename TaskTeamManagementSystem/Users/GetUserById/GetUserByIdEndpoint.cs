@@ -1,6 +1,7 @@
 using Carter;
 using Mapster;
 using MediatR;
+using TaskTeamManagementSystem.Authorization;
 using TaskTeamManagementSystem.Domain.Models;
 
 namespace TaskTeamManagementSystem.Users.GetUserById
@@ -12,21 +13,31 @@ namespace TaskTeamManagementSystem.Users.GetUserById
         public void AddRoutes(IEndpointRouteBuilder app)
         {
             app.MapGet("/users/{id}",
-                async (int id, ISender sender) =>
+                async (int id, ISender sender, HttpContext context, IAuthorizationService authService) =>
                 {
-                    var query = new GetUserByIdQuery(id);
+                    return await AuthorizationFilter.AuthorizeAsync(
+                        context,
+                        authService,
+                        async (user) =>
+                        {
+                            var query = new GetUserByIdQuery(id);
 
-                    var result = await sender.Send(query);
+                            var result = await sender.Send(query);
 
-                    var response = result.Adapt<GetUserByIdResponse>();
+                            var response = result.Adapt<GetUserByIdResponse>();
 
-                    return Results.Ok(response);
+                            return Results.Ok(response);
+                        },
+                        Role.Admin, Role.Manager
+                    );
                 })
             .WithName("GetUserById")
             .Produces<GetUserByIdResponse>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .WithSummary("Get User By ID")
-            .WithDescription("Retrieve a specific user by their ID");
+            .WithDescription("Retrieve a specific user by their ID (Admin and Manager Only)");
         }
     }
 }
