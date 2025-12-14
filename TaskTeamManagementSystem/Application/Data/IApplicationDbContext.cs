@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using TaskTeamManagementSystem.Models;
+using TaskTeamManagementSystem.Domain.Models;
 
 namespace Application.Data;
 public interface IApplicationDbContext

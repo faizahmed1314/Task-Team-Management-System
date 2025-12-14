@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using TaskTeamManagementSystem.Models;
-
+using TaskTeamManagementSystem.Domain.Models;
 
 namespace TaskTeamManagementSystem.Infrastructure.Data.Configurations;
 public class CustomerConfiguration : IEntityTypeConfiguration<User>

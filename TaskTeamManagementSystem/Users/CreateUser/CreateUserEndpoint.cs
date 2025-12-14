@@ -1,7 +1,7 @@
 ﻿using Carter;
 using Mapster;
 using MediatR;
-using TaskTeamManagementSystem.Models;
+using TaskTeamManagementSystem.Domain.Models;
 
 namespace TaskTeamManagementSystem.Users.CreateUser
 {

@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
-using TaskTeamManagementSystem.Models;
+using TaskTeamManagementSystem.Domain.Models;
 
 namespace TaskTeamManagementSystem.Infrastructure.Data
 {

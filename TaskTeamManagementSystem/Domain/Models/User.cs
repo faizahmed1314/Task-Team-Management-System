@@ -1,4 +1,4 @@
-namespace TaskTeamManagementSystem.Models;
+namespace TaskTeamManagementSystem.Domain.Models;
 
 public class User
 {

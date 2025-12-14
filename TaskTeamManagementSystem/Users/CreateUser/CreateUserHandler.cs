@@ -1,7 +1,7 @@
 ﻿using Application.Data;
 using BuildingBlocks.CQRS;
 using FluentValidation;
-using TaskTeamManagementSystem.Models;
+using TaskTeamManagementSystem.Domain.Models;
 
 namespace TaskTeamManagementSystem.Users.CreateUser
 {
