@@ -2,6 +2,7 @@ using Application.Data;
 using BuildingBlocks.CQRS;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using TaskTeamManagementSystem.Authentication;
 using TaskTeamManagementSystem.Domain.Models;
 
 namespace TaskTeamManagementSystem.Users.UpdateUser
@@ -23,12 +24,20 @@ namespace TaskTeamManagementSystem.Users.UpdateUser
         }
     }
 
-    public class UpdateUserCommandHandler(IApplicationDbContext dbContext) 
-        : ICommandHandler<UpdateUserCommand, UpdateUserResult>
+    public class UpdateUserCommandHandler : ICommandHandler<UpdateUserCommand, UpdateUserResult>
     {
+        private readonly IApplicationDbContext _dbContext;
+        private readonly IPasswordHasher _passwordHasher;
+
+        public UpdateUserCommandHandler(IApplicationDbContext dbContext, IPasswordHasher passwordHasher)
+        {
+            _dbContext = dbContext;
+            _passwordHasher = passwordHasher;
+        }
+
         public async Task<UpdateUserResult> Handle(UpdateUserCommand command, CancellationToken cancellationToken)
         {
-            var user = await dbContext.Users
+            var user = await _dbContext.Users
                 .FirstOrDefaultAsync(u => u.Id == command.Id, cancellationToken);
 
             if (user == null)
@@ -38,11 +47,11 @@ namespace TaskTeamManagementSystem.Users.UpdateUser
 
             user.FullName = command.FullName;
             user.Email = command.Email;
-            user.Password = command.Password;
+            user.Password = _passwordHasher.HashPassword(command.Password);
             user.Role = command.Role;
 
-            dbContext.Users.Update(user);
-            await dbContext.SaveChangesAsync(cancellationToken);
+            _dbContext.Users.Update(user);
+            await _dbContext.SaveChangesAsync(cancellationToken);
 
             return new UpdateUserResult(true);
         }

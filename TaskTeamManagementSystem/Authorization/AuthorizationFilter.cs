@@ -17,7 +17,7 @@ namespace TaskTeamManagementSystem.Authorization
                 return Results.Problem(
                     statusCode: StatusCodes.Status401Unauthorized,
                     title: "Unauthorized",
-                    detail: "User authentication required. Please provide X-User-Id header."
+                    detail: "User authentication required. Please provide a valid JWT token in the Authorization header."
                 );
             }
 
@@ -46,7 +46,7 @@ namespace TaskTeamManagementSystem.Authorization
                 return Results.Problem(
                     statusCode: StatusCodes.Status401Unauthorized,
                     title: "Unauthorized",
-                    detail: "User authentication required. Please provide X-User-Id header."
+                    detail: "User authentication required. Please provide a valid JWT token in the Authorization header."
                 );
             }
 

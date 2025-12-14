@@ -1,6 +1,7 @@
 ﻿using Application.Data;
 using BuildingBlocks.CQRS;
 using FluentValidation;
+using TaskTeamManagementSystem.Authentication;
 using TaskTeamManagementSystem.Domain.Models;
 
 namespace TaskTeamManagementSystem.Users.CreateUser
@@ -18,21 +19,28 @@ namespace TaskTeamManagementSystem.Users.CreateUser
             RuleFor(x => x.User.Role).IsInEnum().WithMessage("Role must be a valid value (Admin=0, Manager=1, Employee=2).");
         }
     }
-    public class CreateUserCommandHandler(IApplicationDbContext dbContext) : ICommandHandler<CreateUserCommand, CreateUserResult>
+    
+    public class CreateUserCommandHandler : ICommandHandler<CreateUserCommand, CreateUserResult>
     {
+        private readonly IApplicationDbContext _dbContext;
+        private readonly IPasswordHasher _passwordHasher;
+
+        public CreateUserCommandHandler(IApplicationDbContext dbContext, IPasswordHasher passwordHasher)
+        {
+            _dbContext = dbContext;
+            _passwordHasher = passwordHasher;
+        }
+
         public async Task<CreateUserResult> Handle(CreateUserCommand command, CancellationToken cancellationToken)
         {
+            // Hash the password before storing
+            var user = command.User;
+            user.Password = _passwordHasher.HashPassword(user.Password);
 
-            //create Order entity from command object
-            //save to database
-            //return result 
+            _dbContext.Users.Add(user);
+            await _dbContext.SaveChangesAsync(cancellationToken);
 
-
-            dbContext.Users.Add(command.User);
-            await dbContext.SaveChangesAsync(cancellationToken);
-
-            return new CreateUserResult(command.User.Id);
-
+            return new CreateUserResult(user.Id);
         }
     }
 }
