@@ -1,8 +1,6 @@
 ﻿using Application.Data;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
 using System.Reflection;
-using System.Reflection.Emit;
 using TaskTeamManagementSystem.Domain.Models;
 
 namespace TaskTeamManagementSystem.Infrastructure.Data
@@ -13,9 +11,8 @@ namespace TaskTeamManagementSystem.Infrastructure.Data
             : base(options) { }
 
         public DbSet<User> Users => Set<User>();
-        //public DbSet<Product> Products => Set<Product>();
-        //public DbSet<Order> Orders => Set<Order>();
- 
+        public DbSet<Team> Teams => Set<Team>();
+        public DbSet<TaskItem> Tasks => Set<TaskItem>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

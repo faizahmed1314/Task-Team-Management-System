@@ -3,30 +3,28 @@ using Mapster;
 using MediatR;
 using TaskTeamManagementSystem.Domain.Models;
 
-namespace TaskTeamManagementSystem.Users.GetUsers
+namespace TaskTeamManagementSystem.Teams.GetTeams
 {
-    public record GetUsersResponse(
-        List<User> Users,
+    public record GetTeamsResponse(
+        List<Team> Teams,
         int TotalCount,
         int PageNumber,
         int PageSize,
         int TotalPages
     );
 
-    public class GetUsersEndpoint : ICarterModule
+    public class GetTeamsEndpoint : ICarterModule
     {
         public void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("/users",
+            app.MapGet("/teams",
                 async (ISender sender,
-                       Role? role,
                        string? sortBy,
                        bool sortDescending = false,
                        int pageNumber = 1,
                        int pageSize = 10) =>
                 {
-                    var query = new GetUsersQuery(
-                        Role: role,
+                    var query = new GetTeamsQuery(
                         SortBy: sortBy,
                         SortDescending: sortDescending,
                         PageNumber: pageNumber,
@@ -35,15 +33,15 @@ namespace TaskTeamManagementSystem.Users.GetUsers
 
                     var result = await sender.Send(query);
 
-                    var response = result.Adapt<GetUsersResponse>();
+                    var response = result.Adapt<GetTeamsResponse>();
 
                     return Results.Ok(response);
                 })
-            .WithName("GetUsers")
-            .Produces<GetUsersResponse>(StatusCodes.Status200OK)
+            .WithName("GetTeams")
+            .Produces<GetTeamsResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
-            .WithSummary("Get All Users")
-            .WithDescription("Retrieve users with optional filters (role), sorting (sortBy, sortDescending), and pagination (pageNumber, pageSize)");
+            .WithSummary("Get All Teams")
+            .WithDescription("Retrieve teams with sorting (sortBy, sortDescending) and pagination (pageNumber, pageSize)");
         }
     }
 }
