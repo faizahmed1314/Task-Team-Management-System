@@ -14,7 +14,8 @@ namespace TaskTeamManagementSystem.Users.CreateUser
         {
             RuleFor(x => x.User.FullName).NotEmpty().WithMessage("Name is required.");
             RuleFor(x => x.User.Email).NotEmpty().WithMessage("Email is required.");
-            RuleFor(x => x.User.Role).NotEmpty().WithMessage("Role is required.");
+            RuleFor(x => x.User.Password).NotEmpty().WithMessage("Password is required.");
+            RuleFor(x => x.User.Role).IsInEnum().WithMessage("Role must be a valid value (Admin=0, Manager=1, Employee=2).");
         }
     }
     public class CreateUserCommandHandler(IApplicationDbContext dbContext) : ICommandHandler<CreateUserCommand, CreateUserResult>
